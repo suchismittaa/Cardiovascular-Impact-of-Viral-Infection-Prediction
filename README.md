@@ -160,7 +160,7 @@ jupyter notebook Research_Paper.ipynb
 ## 📬 Contact
 
 **Suchismita Sarkar**
-📧 ssarkar4483@gmail.com | 📱 +91 9382980858
+📧 ssarkar4483@gmail.com |
 🌍 West Bengal, India | [LinkedIn](#) | [GitHub](https://github.com/suchismittaa)
 
 ---
