@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What Does the Model Actually Learn? — Cardiovascular Risk Prediction</title>
+<meta name="description" content="An interactive exploration of a machine-learning study on cardiovascular disease prediction using clinical features.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23090c10'/%3E%3Cpath d='M2 12h5l1.5-4L12 18l2-9 1.5 3H22' fill='none' stroke='%23ff6b5e' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+</head>
+<body>
+
+<!-- ambient grid + noise backdrop -->
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="bg-vignette" aria-hidden="true"></div>
+
+<!-- persistent pulse progress line -->
+<svg class="scroll-pulse" viewBox="0 0 1000 40" preserveAspectRatio="none" aria-hidden="true">
+  <path id="pulse-path" d="M0,20 L1000,20" />
+  <path id="pulse-path-fill" d="M0,20 L1000,20" />
+</svg>
+
+<nav class="topnav">
+  <span class="topnav-mark">CVD&nbsp;/&nbsp;ML</span>
+  <span class="topnav-status"><span class="dot"></span>live client-side inference</span>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero" id="hero">
+  <div class="hero-ecg" aria-hidden="true">
+    <svg viewBox="0 0 1400 260" preserveAspectRatio="none">
+      <path id="hero-ecg-path" d="" />
+    </svg>
+  </div>
+  <div class="hero-inner">
+    <p class="eyebrow">A machine-learning study, explored interactively</p>
+    <h1 class="hero-title">What does the<br><em>model</em> actually learn?</h1>
+    <p class="hero-subtitle">Exploring the patterns behind cardiovascular risk using machine learning — trained on real clinical records, explained one feature at a time.</p>
+
+    <div class="hero-stats">
+      <div class="hero-stat"><span class="hero-stat-num" data-count="303">0</span><span class="hero-stat-label">patients</span></div>
+      <div class="hero-stat"><span class="hero-stat-num" data-count="13">0</span><span class="hero-stat-label">clinical features</span></div>
+      <div class="hero-stat"><span class="hero-stat-num" data-count="5">0</span><span class="hero-stat-label">models compared</span></div>
+      <div class="hero-stat"><span class="hero-stat-num-decimal" data-count="92.7">0</span><span class="hero-stat-label">best ROC-AUC</span></div>
+    </div>
+
+    <a href="#dataset" class="cta">Explore the findings <span class="cta-arrow">→</span></a>
+  </div>
+</header>
+
+<!-- ============ 1. DATASET / SCOPE NOTE ============ -->
+<section class="section" id="dataset">
+  <div class="section-inner">
+    <p class="eyebrow">The data</p>
+    <h2 class="section-title">303 patient records, 13 clinical signals.</h2>
+    <p class="section-lede">
+      This study trains and compares five machine-learning models on the widely used Cleveland heart-disease
+      dataset — clinical measurements such as age, blood pressure, cholesterol, chest pain type, and exercise
+      response, paired with a diagnosis of heart disease. It's the same dataset and methodology used in the
+      underlying research notebook, run again here so every number on this page is live and real.
+    </p>
+    <div class="scope-note">
+      <span class="scope-note-icon">i</span>
+      <p>
+        The source project's title references viral infection as a research motivation, but the dataset itself
+        contains only standard clinical and diagnostic features — no viral-infection variables are present.
+        Everything below is scoped honestly to what the data actually supports:
+        <strong>cardiovascular disease prediction from clinical features.</strong>
+      </p>
+    </div>
+
+    <div class="dataset-chips" id="dataset-chips"><!-- filled by JS --></div>
+  </div>
+</section>
+
+<!-- ============ 2. SCATTER / PATIENT EXPLORER ============ -->
+<section class="section" id="explorer">
+  <div class="section-inner">
+    <p class="eyebrow">The population</p>
+    <h2 class="section-title">Every patient, plotted.</h2>
+    <p class="section-lede">Age against maximum heart rate achieved during a stress test — one point per patient, all 303 of them. Hover any point to read its chart.</p>
+  </div>
+
+  <div class="explorer-grid">
+    <div class="explorer-chart-wrap">
+      <svg id="scatter-svg" viewBox="0 0 720 480" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="explorer-legend">
+        <span><i class="legend-dot dot-healthy"></i>Lower diagnosed risk</span>
+        <span><i class="legend-dot dot-risk"></i>Higher diagnosed risk</span>
+      </div>
+    </div>
+    <div class="explorer-detail" id="explorer-detail">
+      <p class="explorer-detail-placeholder">Hover a point to inspect that patient.</p>
+    </div>
+  </div>
+
+  <div class="section-inner">
+    <div class="callout">
+      <p class="callout-eyebrow">A pattern emerges</p>
+      <p>Patients with a higher-risk diagnosis skew toward lower peak heart rates and older ages, while
+      lower-risk patients cluster toward higher achieved heart rates — visible as the two colors separating
+      diagonally across the plot. It's a tendency in this sample, not a rule for any one patient, and
+      correlation here doesn't establish that either variable causes the other.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. FEATURE IMPORTANCE ============ -->
+<section class="section" id="importance">
+  <div class="section-inner">
+    <p class="eyebrow">What matters most</p>
+    <h2 class="section-title">Which features carry the signal?</h2>
+    <p class="section-lede">Feature importance from the trained Random Forest — how much each clinical measurement reduced prediction error across the model's decision trees. Hover a bar for a plain-English read of that feature.</p>
+  </div>
+  <div class="section-inner">
+    <div class="importance-list" id="importance-list"><!-- filled by JS --></div>
+  </div>
+</section>
+
+<!-- ============ 4. EXPLAINABILITY ============ -->
+<section class="section" id="explain">
+  <div class="section-inner">
+    <p class="eyebrow">Model explainability</p>
+    <h2 class="section-title">Not just a prediction — a reason.</h2>
+    <p class="section-lede">
+      For a sample patient, here's how each clinical feature pushed the model's estimate up or down from its
+      baseline. Contributions are the logistic regression model's actual standardized coefficients applied to
+      this patient's values — an exact decomposition of that model's own math, not an approximation.
+    </p>
+  </div>
+  <div class="explain-wrap" id="explain-wrap"><!-- filled by JS --></div>
+</section>
+
+<!-- ============ 5. BECOME THE PATIENT ============ -->
+<section class="section section-simulator" id="simulator">
+  <div class="section-inner">
+    <p class="eyebrow">The centerpiece</p>
+    <h2 class="section-title">Become the patient.</h2>
+    <p class="section-lede">Adjust any clinical value and watch the model's estimate respond in real time — computed live, in your browser, by the actual trained logistic regression model (85.2% test accuracy, 92.7% ROC-AUC).</p>
+  </div>
+
+  <div class="sim-grid">
+    <div class="sim-controls" id="sim-controls"><!-- filled by JS --></div>
+
+    <div class="sim-readout">
+      <div class="sim-gauge-wrap">
+        <svg class="sim-gauge" viewBox="0 0 240 240">
+          <circle class="gauge-track" cx="120" cy="120" r="100"></circle>
+          <circle class="gauge-fill" id="gauge-fill" cx="120" cy="120" r="100"></circle>
+        </svg>
+        <div class="sim-gauge-center">
+          <span class="sim-gauge-num" id="sim-risk-num">--</span>
+          <span class="sim-gauge-pct">%</span>
+          <span class="sim-gauge-label">predicted risk</span>
+        </div>
+      </div>
+      <svg class="sim-pulse-line" id="sim-pulse-line" viewBox="0 0 240 60" preserveAspectRatio="none"><path id="sim-pulse-path" d=""></path></svg>
+
+      <p class="sim-whatchanged" id="sim-whatchanged">Move a control to see how it changes the model's estimate.</p>
+
+      <div class="sim-contrib" id="sim-contrib"><!-- filled by JS --></div>
+    </div>
+  </div>
+  <p class="sim-disclaimer">This tool reflects patterns in a 303-patient research dataset. It is not a diagnostic device and shouldn't inform real medical decisions.</p>
+</section>
+
+<!-- ============ 6. MODEL COMPARISON ============ -->
+<section class="section" id="models">
+  <div class="section-inner">
+    <p class="eyebrow">Performance</p>
+    <h2 class="section-title">How well did each model do?</h2>
+    <p class="section-lede">All five models trained on an identical 80/20 split, same random seed, same standardized features. Naive Bayes and SVM edge out the rest on this dataset; the simple, fully interpretable Logistic Regression is close behind and powers the live demo above.</p>
+  </div>
+  <div class="section-inner">
+    <div class="model-table" id="model-table"><!-- filled by JS --></div>
+  </div>
+</section>
+
+<!-- ============ 7. WHAT DID WE LEARN ============ -->
+<section class="section" id="summary">
+  <div class="section-inner">
+    <p class="eyebrow">Closing</p>
+    <h2 class="section-title">So, what did we learn?</h2>
+  </div>
+  <div class="findings-grid">
+    <div class="finding">
+      <span class="finding-num">01</span>
+      <h3>Multiple factors matter</h3>
+      <p>No single measurement drives the model's estimate. Chest pain type, exercise-induced angina, ST depression, vessel count, and heart rate all move the needle together — risk here is a combination, not a single symptom.</p>
+    </div>
+    <div class="finding">
+      <span class="finding-num">02</span>
+      <h3>Some signals carry more weight</h3>
+      <p>ST depression during exercise (oldpeak), peak heart rate, and the number of major vessels colored by fluoroscopy consistently ranked as the strongest predictors across the trained Random Forest — see the ranking above.</p>
+    </div>
+    <div class="finding">
+      <span class="finding-num">03</span>
+      <h3>Prediction can be personalized</h3>
+      <p>The same model that scores 85%+ accuracy on held-out patients can take any individual's clinical profile and return a specific, explainable estimate — as shown in the simulator above.</p>
+    </div>
+  </div>
+
+  <div class="section-inner footer-cta">
+    <a class="research-link" href="assets/Final-Project-Report.pdf" target="_blank" rel="noopener">View the full research report →</a>
+    <a class="research-link" href="assets/Research_Paper.ipynb" target="_blank" rel="noopener">Download the notebook →</a>
+  </div>
+</section>
+
+<footer class="page-footer">
+  <p>Cardiovascular disease prediction using clinical features · Cleveland Heart Disease dataset · Built for portfolio demonstration</p>
+</footer>
+
+<script src="assets/data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
